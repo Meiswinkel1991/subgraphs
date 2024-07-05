@@ -1,5 +1,16 @@
 /* eslint-disable prefer-const */
-import { Bundle, Burn, Collect, Factory, Mint, Pool, SetProtocolFeeEvent, Swap, Tick, Token } from '../../generated/schema'
+import {
+  Bundle,
+  Burn,
+  Collect,
+  Factory,
+  Mint,
+  Pool,
+  SetProtocolFeeEvent,
+  Swap,
+  Tick,
+  Token,
+} from '../../generated/schema'
 import { Pool as PoolABI } from '../../generated/Factory/Pool'
 import { BigDecimal, BigInt, ethereum, log } from '@graphprotocol/graph-ts'
 import {
@@ -10,7 +21,7 @@ import {
   Swap as SwapEvent,
   Collect as CollectEvent,
   CollectProtocol as CollectProtocolEvent,
-  SetFeeProtocol as ProtocolFeeEvent
+  SetFeeProtocol as ProtocolFeeEvent,
 } from '../../generated/templates/Pool/Pool'
 import { convertTokenToDecimal, loadTransaction, safeDiv } from '../utils'
 import { FACTORY_ADDRESS, ONE_BI, ZERO_BD, ZERO_BI } from '../constants'
@@ -21,7 +32,7 @@ import {
   updateTickDayData,
   updateTokenDayData,
   updateTokenHourData,
-  updateUniswapDayData
+  updateUniswapDayData,
 } from '../utils/intervalUpdates'
 import { createTick, feeTierToTickSpacing } from '../utils/tick'
 
@@ -166,8 +177,8 @@ export function handleMint(event: MintEvent): void {
   mint.save()
 
   // Update inner tick vars and save the ticks
-  updateTickFeeVarsAndSave(lowerTick!, event)
-  updateTickFeeVarsAndSave(upperTick!, event)
+  updateTickFeeVarsAndSave(lowerTick, event)
+  updateTickFeeVarsAndSave(upperTick, event)
 }
 
 // Note: this handler need not adjust TVL because that is accounted for in the handleCollect handler
@@ -246,8 +257,8 @@ export function handleBurn(event: BurnEvent): void {
   updateTokenDayData(token1 as Token, event)
   updateTokenHourData(token0 as Token, event)
   updateTokenHourData(token1 as Token, event)
-  updateTickFeeVarsAndSave(lowerTick!, event)
-  updateTickFeeVarsAndSave(upperTick!, event)
+  updateTickFeeVarsAndSave(lowerTick, event)
+  updateTickFeeVarsAndSave(upperTick, event)
 
   token0.save()
   token1.save()
@@ -285,7 +296,10 @@ export function handleSwap(event: SwapEvent): void {
   let amount0USD = amount0ETH.times(bundle.ethPriceUSD)
   let amount1USD = amount1ETH.times(bundle.ethPriceUSD)
   // get amount that should be tracked only - div 2 because cant count both input and output as volume
-  let amountTotalUSDTracked = safeDiv(getTrackedAmountUSD(amount0Abs, token0, amount1Abs, token1), BigDecimal.fromString('2'))
+  let amountTotalUSDTracked = safeDiv(
+    getTrackedAmountUSD(amount0Abs, token0, amount1Abs, token1),
+    BigDecimal.fromString('2')
+  )
   let amountTotalETHTracked = safeDiv(amountTotalUSDTracked, bundle.ethPriceUSD)
   let amountTotalUSDUntracked = safeDiv(amount0USD.plus(amount1USD), BigDecimal.fromString('2'))
 
@@ -453,11 +467,7 @@ export function handleSwap(event: SwapEvent): void {
     loadTickUpdateFeeVarsAndSave(newTick.toI32(), event)
   }
 
-
-  let numIters = oldTick
-    .minus(newTick)
-    .abs()
-    .div(tickSpacing)
+  let numIters = oldTick.minus(newTick).abs().div(tickSpacing)
 
   if (numIters.gt(BigInt.fromI32(100))) {
     // In case more than 100 ticks need to be updated ignore the update in
@@ -576,7 +586,6 @@ export function handlePoolCollect(event: CollectEvent): void {
   return
 }
 
-
 export function handleProtocolCollect(event: CollectProtocolEvent): void {
   const bundle = Bundle.load('1')!
   const pool = Pool.load(event.address.toHexString())
@@ -670,10 +679,12 @@ export function handleSetProtocolFee(event: ProtocolFeeEvent): void {
     return
   }
 
-  pool.isProtocolFeeEnabled = (event.params.feeProtocol0New > 0 || event.params.feeProtocol1New > 0)
+  pool.isProtocolFeeEnabled = event.params.feeProtocol0New > 0 || event.params.feeProtocol1New > 0
   pool.save()
 
-  const protocolFeeEvent = new SetProtocolFeeEvent(event.transaction.hash.toHexString() + '-' + event.logIndex.toString())
+  const protocolFeeEvent = new SetProtocolFeeEvent(
+    event.transaction.hash.toHexString() + '-' + event.logIndex.toString()
+  )
   protocolFeeEvent.pool = pool.id
   protocolFeeEvent.logIndex = event.logIndex
   protocolFeeEvent.timestamp = event.block.timestamp
@@ -694,18 +705,13 @@ function updateTickFeeVarsAndSave(tick: Tick, event: ethereum.Event): void {
   tick.feeGrowthOutside1X128 = tickResult.value3
   tick.save()
 
-  updateTickDayData(tick!, event)
+  updateTickDayData(tick, event)
 }
 
 function loadTickUpdateFeeVarsAndSave(tickId: i32, event: ethereum.Event): void {
   let poolAddress = event.address
-  let tick = Tick.load(
-    poolAddress
-      .toHexString()
-      .concat('#')
-      .concat(tickId.toString())
-  )
+  let tick = Tick.load(poolAddress.toHexString().concat('#').concat(tickId.toString()))
   if (tick !== null) {
-    updateTickFeeVarsAndSave(tick!, event)
+    updateTickFeeVarsAndSave(tick, event)
   }
 }

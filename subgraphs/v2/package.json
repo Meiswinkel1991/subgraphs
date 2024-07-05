@@ -14,7 +14,13 @@
     "test": "graph test -r",
     "create-local": "graph create --node http://localhost:8020/ sushiswap/v2-ethereum",
     "remove-local": "graph remove --node http://localhost:8020/ sushiswap/v2-ethereum",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 sushiswap/v2-ethereum"
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 sushiswap/v2-ethereum",
+    "deploy-server": "graph deploy --node https://graph.octodefi.com/deploy --ipfs https://ipfs.octodefi.com/ javsphere",
+    "create-server": "graph create --node https://graph.octodefi.com/deploy javsphere",
+    "remove-server": "graph remove --node https://graph.octodefi.com/deploy javsphere",
+    "deploy-server-testnet": "graph deploy --node https://graph-testnet.octodefi.com/deploy --ipfs https://ipfs.octodefi.com/ javsphere",
+    "create-server-testnet": "graph create --node https://graph-testnet.octodefi.com/deploy javsphere",
+    "remove-server-testnet": "graph remove --node https://graph-testnet.octodefi.com/deploy javsphere"
   },
   "devDependencies": {
     "abi": "workspace:*",

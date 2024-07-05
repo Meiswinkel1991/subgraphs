@@ -4,7 +4,7 @@ import {
   DecreaseLiquidity,
   IncreaseLiquidity,
   NonfungiblePositionManager,
-  Transfer
+  Transfer,
 } from '../../generated/NonfungiblePositionManager/NonfungiblePositionManager'
 import { Bundle, DecreaseEvent, IncreaseEvent, Position, PositionSnapshot, Token } from '../../generated/schema'
 import { ADDRESS_ZERO, factoryContract, ZERO_BD, ZERO_BI } from '../constants'
@@ -86,14 +86,12 @@ function savePositionSnapshot(position: Position, event: ethereum.Event): void {
 }
 
 export function handleIncreaseLiquidity(event: IncreaseLiquidity): void {
-
   let position = getPosition(event, event.params.tokenId)
   // position was not able to be fetched
   if (position == null) {
     return
   }
 
-  
   const tx = loadTransaction(event)
   const increase = new IncreaseEvent(event.transaction.hash.toHexString().concat(':').concat(event.logIndex.toString()))
   increase.transaction = tx.id
@@ -124,15 +122,14 @@ export function handleIncreaseLiquidity(event: IncreaseLiquidity): void {
     .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)))
   position.amountDepositedUSD = position.amountDepositedUSD.plus(newDepositUSD)
 
-  updateFeeVars(position!, event, event.params.tokenId)
+  updateFeeVars(position, event, event.params.tokenId)
 
   position.save()
 
-  savePositionSnapshot(position!, event)
+  savePositionSnapshot(position, event)
 }
 
 export function handleDecreaseLiquidity(event: DecreaseLiquidity): void {
-
   let position = getPosition(event, event.params.tokenId)
 
   // position was not able to be fetched
@@ -168,9 +165,9 @@ export function handleDecreaseLiquidity(event: DecreaseLiquidity): void {
     .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)))
   position.amountWithdrawnUSD = position.amountWithdrawnUSD.plus(newWithdrawUSD)
 
-  position = updateFeeVars(position!, event, event.params.tokenId)
+  position = updateFeeVars(position, event, event.params.tokenId)
   position.save()
-  savePositionSnapshot(position!, event)
+  savePositionSnapshot(position, event)
 }
 
 export function handleCollect(event: Collect): void {
@@ -196,9 +193,9 @@ export function handleCollect(event: Collect): void {
     .plus(amount1.times(token1.derivedETH.times(bundle.ethPriceUSD)))
   position.amountCollectedUSD = position.amountCollectedUSD.plus(newCollectUSD)
 
-  position = updateFeeVars(position!, event, event.params.tokenId)
+  position = updateFeeVars(position, event, event.params.tokenId)
   position.save()
-  savePositionSnapshot(position!, event)
+  savePositionSnapshot(position, event)
 }
 
 export function handleTransfer(event: Transfer): void {
@@ -212,5 +209,5 @@ export function handleTransfer(event: Transfer): void {
   position.owner = event.params.to
   position.save()
 
-  savePositionSnapshot(position!, event)
+  savePositionSnapshot(position, event)
 }
